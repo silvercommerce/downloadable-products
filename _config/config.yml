@@ -1,0 +1,7 @@
+---
+Name: downloadableproductsconfig
+After: '#rootroutes'
+---
+Director:
+  rules:
+    'assets/downloadable': 'DownloadableFileController'
