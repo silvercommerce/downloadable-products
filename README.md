@@ -68,7 +68,7 @@ this:
         <tr>
             <td>
                 {$Title} 
-                <% if $DownloadLink %>(<a href="$DownloadLink">Download</a>)<% end_if %>
+                <% if $Product.DownloadLink %>(<a href="$Product.DownloadLink">Download</a>)<% end_if %>
                 <% if $StockID %>($StockID)<% end_if %><br/>
                 <em>$CustomisationHTML</em>
             </td>
