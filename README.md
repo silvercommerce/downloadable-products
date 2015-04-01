@@ -44,7 +44,7 @@ do this in your .htaccess or web.config by adding the following:
     RewriteCond %{REQUEST_URI} ^(.*)$
     RewriteRule assets/downloadable/* $frameworkDir/main.php?url=%1 [QSA]
     
-Or alternaticly, if you use web.config, add the following:
+Or alternativley, if you use web.config, add the following:
 
     <rewrite>
         <rules>
@@ -54,6 +54,9 @@ Or alternaticly, if you use web.config, add the following:
             </rule>
         </rules>
     </rewrite>
+
+**NOTE:** The IIS script above **should** work, but has not been tested,
+some tweaking may be required. 
 
 ### Add download link to orders pannel and emails
 
