@@ -35,9 +35,8 @@ class DownloadableProduct extends Product {
     public function getDownloadLink() {
         $link = "";
         
-        if($this->FileID && $this->canDownload()) {
+        if($this->FileID)
             $link = $this->File()->Link();
-        }
         
         return $link;
     }
