@@ -5,3 +5,6 @@ After: '#rootroutes'
 Director:
   rules:
     'assets/downloadable': 'DownloadableFileController'
+Checkout_Controller:
+  extensions:
+    - DownloadableCheckoutExtension
