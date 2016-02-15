@@ -22,7 +22,7 @@ Then run: dev/build/?flush=all
 Or alternativly add use composer:
 
     i-lateral/silverstripe-commerce-downloadableproduct
-    
+
 ## Usage
 
 By default this module adds a "Downloadable Product" postage amount and
@@ -36,14 +36,14 @@ manually in order to gain the most from this module.
 
 ### Restrict the downloads folder (using Apache or IIS 7)
 
-The file downloads section of your Silverstripe install will need to be  
+The file downloads section of your Silverstripe install will need to be
 restricted (otherwise users could share the download links). You can
-do this in your .htaccess or web.config by adding the following: 
+do this in your .htaccess or web.config by adding the following:
 
     RewriteEngine On
     RewriteCond %{REQUEST_URI} ^(.*)$
     RewriteRule assets/downloadable/* $frameworkDir/main.php?url=%1 [QSA]
-    
+
 Or alternativley, if you use web.config, add the following:
 
     <rewrite>
@@ -56,7 +56,7 @@ Or alternativley, if you use web.config, add the following:
     </rewrite>
 
 **NOTE:** The IIS script above **should** work, but has not been tested,
-some tweaking may be required. 
+some tweaking may be required.
 
 ### Add download link to orders pannel and emails
 
@@ -66,11 +66,11 @@ template. For example, in the order paid email you can add something,ike
 this:
 
     OrderNotificationEmail_Customer.ss
-    
+
     <tbody><% loop $Items %>
         <tr>
             <td>
-                {$Title} 
+                {$Title}
                 <% if $Product.DownloadLink %>(<a href="$Product.DownloadLink">Download</a>)<% end_if %>
                 <% if $StockID %>($StockID)<% end_if %><br/>
                 <em>$CustomisationHTML</em>
@@ -80,5 +80,5 @@ this:
         </tr>
     <% end_loop %></tbody>
 
-### 
+###
 
