@@ -1,30 +1,30 @@
 <?php
 
 class DownloadableCheckoutExtension extends Extension {
-    
+
     /**
      * Check to see if the shopping cart only contains downloadable
      * products.
-     * 
+     *
      * @return Boolean
      */
     public function onlyDownloadable() {
         $cart = ShoppingCart::get();
-        
+
         foreach($cart->getItems() as $item) {
             if(!$item->FindStockItem() InstanceOf DownloadableProduct) {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * If the shopping cart only contains downloadable products, we
      * don't need to set delivery details, so we will copy the billing
      * details automatically
-     * 
+     *
      */
     public function onBeforeDelivery() {
         if($this->owner->onlyDownloadable()) {
@@ -33,10 +33,10 @@ class DownloadableCheckoutExtension extends Extension {
                 ->redirect($this->owner->Link('finish'));
         }
     }
-    
+
     /**
-     * If we use a 
-     * 
+     * If we use a
+     *
      */
     public function onBeforeUseMemberAddress() {
         if($this->owner->onlyDownloadable()) {
@@ -44,10 +44,10 @@ class DownloadableCheckoutExtension extends Extension {
             $otherid = $this->owner->request->param("OtherID");
             $data = array();
             $address = MemberAddress::get()->byID($id);
-            
+
             if($address) {
                 $data = array();
-                
+
                 $data['DeliveryFirstnames']  = $address->FirstName;
                 $data['DeliverySurname']    = $address->Surname;
                 $data['DeliveryAddress1']   = $address->Address1;
@@ -60,23 +60,23 @@ class DownloadableCheckoutExtension extends Extension {
             }
         }
     }
-    
+
     /**
      * If the shopping cart only contains downloadable products, we
      * don't need to set delivery details, so we will copy the billing
      * details automatically
-     * 
+     *
      */
     public function updateBillingForm($form) {
         // Change the form buttons
         if($this->owner->onlyDownloadable()) {
             $form->Actions()->removeByName("action_doSetDelivery");
-            
-            // Rename set delivery 
+
+            // Rename set delivery
             $set_delivery = $form
                 ->Actions()
                 ->dataFieldByName("action_doContinue");
-            
+
             if($set_delivery)
                 $set_delivery->setTitle(_t("DownloadableProduct.Continue", "Continue"));
         }

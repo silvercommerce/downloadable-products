@@ -1,11 +1,11 @@
 <?php
 
 class DownloadableProduct extends Product {
-    
+
     /**
      * A list of statuses that an order containing this product must
-     * have in order to allow this product to be downloaded. 
-     * 
+     * have in order to allow this product to be downloaded.
+     *
      * @config
      */
     private static $allowed_order_statuses = array(
@@ -13,53 +13,53 @@ class DownloadableProduct extends Product {
         "processing",
         "dispatched"
     );
-    
+
     /**
      * @config
      */
     private static $description = "A product that can be downloaded";
-    
+
     private static $has_one = array(
         "File" => "File"
     );
-    
+
     private static $casting = array(
         "DownloadLink" => "Varchar"
     );
-    
-    
+
+
     /**
      * Get the link to download the file associated with this product
-     * 
+     *
      */
     public function getDownloadLink() {
         $link = "";
-        
+
         if($this->FileID)
             $link = $this->File()->Link();
-        
+
         return $link;
     }
-    
-    
+
+
     public function getCMSFields() {
         $fields = parent::getCMSFields();
-        
+
         $fields->removeByName("Weight");
         $fields->removeByName("PackSize");
-        
+
         $fields->addFieldToTab(
             "Root.Settings",
             UploadField::create("File")
                 ->setFolderName("downloadable")
         );
-        
+
         return $fields;
     }
-    
+
     public function requireDefaultRecords() {
         parent::requireDefaultRecords();
-        
+
         // See if we need to create downloadable postage
         $records = PostageArea::get()
             ->filter(
@@ -69,10 +69,10 @@ class DownloadableProduct extends Product {
                     "Downloadable Goods"
                 )
             );
-        
+
         if(!$records->exists()) {
             $config = SiteConfig::current_site_config();
-            
+
             $postage = PostageArea::create();
             $postage->Title = _t(
                 "DownloadableProduct.DownloadableGoods",
@@ -90,19 +90,19 @@ class DownloadableProduct extends Product {
             DB::alteration_message(_t("DownloadableProduct.AddedPostage", "Added downloadable postage"), 'created');
         }
     }
-    
+
     public function onBeforeWrite() {
         parent::onBeforeWrite();
-        
+
         // Downloadable products have 0 weight and Pack Size
         $this->Weight = 0;
         $this->PackSize = 0;
     }
-    
+
     public function canDownload($member = null) {
         if(!$member || !$member instanceof Member)
             $member = Member::currentUser();
-            
+
         if($member) {
             $items = $member
                 ->Orders()
@@ -110,10 +110,10 @@ class DownloadableProduct extends Product {
                     "Status" => $this->config()->allowed_order_statuses,
                     "Items.StockID" => $this->StockID
                 ));
-                
+
             return $items->exists();
         }
-        
+
         return false;
     }
 }

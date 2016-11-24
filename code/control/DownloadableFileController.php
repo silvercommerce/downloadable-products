@@ -3,12 +3,12 @@
 /**
  * Core controller responsible for determining if the current user can
  * download the file selected.
- * 
+ *
  * A lot of this code is taken and modified from the "secure asssts"
  * Silverstripe Module
  */
 class DownloadableFileController extends Controller {
-    
+
     // We calculate the timelimit based on the filesize. Set to 0 to give unlimited timelimit.
 	// The calculation is: give enough time for the user with x kB/s connection to donwload the entire file.
 	// E.g. The default 50kB/s equates to 348 minutes per 1GB file.
@@ -40,9 +40,9 @@ class DownloadableFileController extends Controller {
 				$file = new Image();
 				$file->Filename = $url;
 			}
-			
+
 			$this->extend('onBeforeSendFile', $file);
-			
+
 			return $this->sendFile($file);
 		} else {
 			if($file instanceof File) {
@@ -100,7 +100,7 @@ class DownloadableFileController extends Controller {
 
     /**
      * Determine if the file we found can be downloaded or not
-     * 
+     *
      * @return Boolean
      */
 	public function canDownloadFile(File $file = null) {
@@ -115,5 +115,5 @@ class DownloadableFileController extends Controller {
 
 		return false;
 	}
-    
+
 }
