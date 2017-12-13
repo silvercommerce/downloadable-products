@@ -72,13 +72,13 @@ class DownloadableCheckoutExtension extends Extension {
         if($this->owner->onlyDownloadable()) {
             $form->Actions()->removeByName("action_doSetDelivery");
 
-            // Rename set delivery
-            $set_delivery = $form
+            // Add set delivery with different name
+            $form
                 ->Actions()
-                ->dataFieldByName("action_doContinue");
-
-            if($set_delivery)
-                $set_delivery->setTitle(_t("DownloadableProduct.Continue", "Continue"));
+                ->add(FormAction::create(
+                    'doContinue',
+                    _t("DownloadableProduct.Continue", "Continue")
+                )->addExtraClass('checkout-action-next'));
         }
     }
 }
