@@ -24,9 +24,20 @@ class DownloadableProduct extends Product {
     );
 
     private static $casting = array(
-        "DownloadLink" => "Varchar"
+        "DownloadLink" => "Varchar",
+        "Deliverable" => "Boolean"
     );
 
+    /**
+     * Is this product deliverable? Largely this is used
+     * by the shopping cart when adding to cart.
+     *
+     * @return boolean
+     */
+    public function getDeliverable()
+    {
+        return false;
+    }
 
     /**
      * Get the link to download the file associated with this product
