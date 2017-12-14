@@ -120,10 +120,29 @@ class DownloadableFileController extends Controller {
 		$request = $this->getRequest();
 		$return = false;
 		$vars = $request->getVars();
+		$url = array_key_exists('url', $_GET) ? $_GET['url'] : $_SERVER['REQUEST_URI'];
+		$url = Director::makeRelative(ltrim(str_replace(BASE_URL, '', $url), '/'));
+		$file = File::find($url);
 
 		$order = Order::get()->byID($vars['o']);
 		if ($order) {
 			$return = $order->AccessKey == $vars['k'] ? true : false;
+			if ($return) {
+				$product = DownloadableProduct::get()
+					->filter("FileID", $file->ID)
+					->first();
+					if($product) {
+						$life = $product->LinkLife;
+						$origin = new DateTime($order->dbObject('LastEdited')->Rfc822());
+						$now = new DateTime();
+						$diff = (int) $now->diff($origin)->format('%d');
+						if ($life < $diff) {
+							$return = false;
+						}
+					} else {
+						$return = false;
+					}
+			}
 		}
 
 		return $return;

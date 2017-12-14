@@ -19,6 +19,10 @@ class DownloadableProduct extends Product {
      */
     private static $description = "A product that can be downloaded";
 
+    private static $db = array(
+        'LinkLife' => 'Int'
+    );
+
     private static $has_one = array(
         "File" => "File"
     );
@@ -26,6 +30,10 @@ class DownloadableProduct extends Product {
     private static $casting = array(
         "DownloadLink" => "Varchar",
         "Deliverable" => "Boolean"
+    );
+
+    private static $defaults = array(
+        'LinkLife' => 7
     );
 
     /**
@@ -59,10 +67,13 @@ class DownloadableProduct extends Product {
         $fields->removeByName("Weight");
         $fields->removeByName("PackSize");
 
-        $fields->addFieldToTab(
+        $fields->addFieldsToTab(
             "Root.Settings",
-            UploadField::create("File")
-                ->setFolderName("downloadable")
+            array(
+                TextField::create('LinkLife','Life of download link (in days)'),
+                UploadField::create("File")
+                    ->setFolderName("downloadable")
+            )
         );
 
         return $fields;
