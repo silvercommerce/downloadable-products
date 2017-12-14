@@ -8,3 +8,6 @@ Director:
 Checkout_Controller:
   extensions:
     - DownloadableCheckoutExtension
+OrderItem:
+  extensions:
+    - DownloadableOrderItemExtension

@@ -109,11 +109,24 @@ class DownloadableFileController extends Controller {
                 ->filter("FileID", $file->ID)
                 ->first();
 
-			if($product && $product->canDownload())
+			if($product && ($product->canDownload() || $this->hasAccess()))
 				return true;
 		}
 
 		return false;
+	}
+
+	public function hasAccess() {
+		$request = $this->getRequest();
+		$return = false;
+		$vars = $request->getVars();
+
+		$order = Order::get()->byID($vars['o']);
+		if ($order) {
+			$return = $order->AccessKey == $vars['k'] ? true : false;
+		}
+
+		return $return;
 	}
 
 }
