@@ -1,6 +1,7 @@
 <?php
 
-class DownloadableCheckoutExtension extends Extension {
+class DownloadableCheckoutExtension extends Extension
+{
 
     /**
      * Check to see if the shopping cart only contains downloadable
@@ -8,11 +9,12 @@ class DownloadableCheckoutExtension extends Extension {
      *
      * @return Boolean
      */
-    public function onlyDownloadable() {
+    public function onlyDownloadable()
+    {
         $cart = ShoppingCart::get();
 
-        foreach($cart->getItems() as $item) {
-            if(!$item->FindStockItem() InstanceOf DownloadableProduct) {
+        foreach ($cart->getItems() as $item) {
+            if (!$item->FindStockItem() instanceof DownloadableProduct) {
                 return false;
             }
         }
@@ -26,8 +28,9 @@ class DownloadableCheckoutExtension extends Extension {
      * details automatically
      *
      */
-    public function onBeforeDelivery() {
-        if($this->owner->onlyDownloadable()) {
+    public function onBeforeDelivery()
+    {
+        if ($this->owner->onlyDownloadable()) {
             return $this
                 ->owner
                 ->redirect($this->owner->Link('finish'));
@@ -38,14 +41,15 @@ class DownloadableCheckoutExtension extends Extension {
      * If we use a
      *
      */
-    public function onBeforeUseMemberAddress() {
-        if($this->owner->onlyDownloadable()) {
+    public function onBeforeUseMemberAddress()
+    {
+        if ($this->owner->onlyDownloadable()) {
             $id = $this->owner->request->param("ID");
             $otherid = $this->owner->request->param("OtherID");
             $data = array();
             $address = MemberAddress::get()->byID($id);
 
-            if($address) {
+            if ($address) {
                 $data = array();
 
                 $data['DeliveryFirstnames']  = $address->FirstName;
@@ -67,9 +71,10 @@ class DownloadableCheckoutExtension extends Extension {
      * details automatically
      *
      */
-    public function updateBillingForm($form) {
+    public function updateBillingForm($form)
+    {
         // Change the form buttons
-        if($this->owner->onlyDownloadable()) {
+        if ($this->owner->onlyDownloadable()) {
             $form->Actions()->removeByName("action_doSetDelivery");
 
             // Add set delivery with different name
