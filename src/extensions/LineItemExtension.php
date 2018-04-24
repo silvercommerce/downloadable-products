@@ -8,6 +8,10 @@ use SilverCommerce\OrdersAdmin\Model\Invoice;
 class LineItemExtension extends DataExtension
 {
 
+    private static $casting = [
+        "DownloadLink" => "Varchar"
+    ];
+
     public function getDownloadLink()
     {
         $order = Invoice::get()->byID($this->owner->ParentID);
