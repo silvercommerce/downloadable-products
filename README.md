@@ -1,27 +1,21 @@
-# Silverstripe Commerce
+# SilverCommerce Downloadable Products Module
 
-## Downloadable Product Module
-
-Add downloadable product type to the Silverstripe Commerce module that
-allows users to attach a file to a product that can only be downloaded
-when the user is logged in and has bought it.
+Add downloadable product type to the SilverCommerce install that allows users
+to attach a file to a product that can only be downloaded when the user is
+logged in and has bought it.
 
 ## Dependancies
 
-* SilverStripe Framework 3.1.x
-* Silverstripe Commerce
+* SilverStripe Framework 4.0.x
+* SilverCommerce 1.0.x
 
 ## Installation
 
-Install this module either by downloading and adding to:
+Install using composer:
 
-    [silverstripe-root]/commerce-downloadableproducts
+    composer require silvercommerce/downloadable-products
 
 Then run: dev/build/?flush=all
-
-Or alternativly add use composer:
-
-    i-lateral/silverstripe-commerce-downloadableproduct
 
 ## Usage
 
