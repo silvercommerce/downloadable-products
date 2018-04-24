@@ -1,5 +1,18 @@
 <?php
 
+namespace SilverCommerce\DownloadableProducts;
+
+use DateTime;
+use SilverStripe\Assets\File;
+use SilverStripe\Assets\Image;
+use SilverStripe\Control\Director;
+use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Control\Controller;
+use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Control\HTTPResponse;
+use SilverCommerce\OrdersAdmin\Model\Invoice;
+use SilverCommerce\DownloadableProducts\DownloadableProduct;
+
 /**
  * Core controller responsible for determining if the current user can
  * download the file selected.
@@ -10,23 +23,36 @@
 class DownloadableFileController extends Controller
 {
 
-    // We calculate the timelimit based on the filesize. Set to 0 to give unlimited timelimit.
-    // The calculation is: give enough time for the user with x kB/s connection to donwload the entire file.
-    // E.g. The default 50kB/s equates to 348 minutes per 1GB file.
-    private static $min_download_bandwidth = 50; // [in kilobytes per second]
+    /**
+     * We calculate the timelimit based on the filesize. Set to 0 to give unlimited
+     * timelimit. The calculation is: give enough time for the user with x kB/s
+     * connection to donwload the entire file.
+     *
+     * E.G. The default 50kB/s equates to 348 minutes per 1GB file.
+     *
+     * @var int kilobytes per second
+     */
+    private static $min_download_bandwidth = 50;
 
     /**
      * Process all incoming requests passed to this controller, checking
      * that the file exists and passing the file through if possible.
+     *
+     * {@inheritdoc}
+     *
+     * @return HTTPResponse
      */
-    public function handleRequest(SS_HTTPRequest $request, DataModel $model)
+    public function handleRequest(HTTPRequest $request)
     {
+        if (!$request) {
+            user_error("Controller::handleRequest() not passed a request!", E_USER_ERROR);
+        }
+        
         // Copied from Controller::handleRequest()
         $this->pushCurrent();
         $this->urlParams = $request->allParams();
         $this->request = $request;
-        $this->response = new SS_HTTPResponse();
-        $this->setDataModel($model);
+        $this->response = new HTTPResponse();
 
         $url = array_key_exists('url', $_GET) ? $_GET['url'] : $_SERVER['REQUEST_URI'];
 
@@ -52,7 +78,7 @@ class DownloadableFileController extends Controller
                 Security::permissionFailure($this, 'You are not authorised to access this resource. Please log in.');
             } else {
                 // File doesn't exist
-                $this->response = new SS_HTTPResponse('File Not Found', 404);
+                $this->response = new HTTPResponse('File Not Found', 404);
             }
         }
 
@@ -130,7 +156,7 @@ class DownloadableFileController extends Controller
         $url = Director::makeRelative(ltrim(str_replace(BASE_URL, '', $url), '/'));
         $file = File::find($url);
 
-        $order = Order::get()->byID($vars['o']);
+        $order = Invoice::get()->byID($vars['o']);
         if ($order) {
             $return = $order->AccessKey == $vars['k'] ? true : false;
             if ($return) {

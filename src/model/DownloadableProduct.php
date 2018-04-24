@@ -5,7 +5,11 @@ namespace SilverCommerce\DownloadableProducts;
 use Product;
 use SilverStripe\Forms\TextField;
 use SilverStripe\AssetAdmin\Forms\UploadField;
+use SilverStripe\Security\Security;
 
+/**
+ * Product class that will allow adding of product to the CMS.
+ */
 class DownloadableProduct extends Product
 {
 
@@ -91,41 +95,6 @@ class DownloadableProduct extends Product
         return $fields;
     }
 
-    public function requireDefaultRecords()
-    {
-        parent::requireDefaultRecords();
-
-        // See if we need to create downloadable postage
-        $records = PostageArea::get()
-            ->filter(
-                "Title",
-                _t(
-                    "DownloadableProduct.DownloadableGoods",
-                    "Downloadable Goods"
-                )
-            );
-
-        if (!$records->exists()) {
-            $config = SiteConfig::current_site_config();
-
-            $postage = PostageArea::create();
-            $postage->Title = _t(
-                "DownloadableProduct.DownloadableGoods",
-                "Downloadable Goods"
-            );
-            $postage->Country = "*";
-            $postage->ZipCode = "*";
-            $postage->Calculation = "Weight";
-            $postage->Unit = 0.0;
-            $postage->Cost = 0.0;
-            $postage->Tax = 0.0;
-            $postage->SiteID = $config->ID;
-            $postage->write();
-
-            DB::alteration_message(_t("DownloadableProduct.AddedPostage", "Added downloadable postage"), 'created');
-        }
-    }
-
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
@@ -138,10 +107,10 @@ class DownloadableProduct extends Product
     public function canDownload($member = null)
     {
         if (!$member || !$member instanceof Member) {
-            $member = Member::currentUser();
+            $member = Security::getCurrentUser();
         }
 
-        if ($member) {
+        if (isset($member)) {
             $items = $member
                 ->Orders()
                 ->filter(array(

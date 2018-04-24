@@ -1,11 +1,16 @@
 <?php
 
-class DownloadableOrderItemExtension extends DataExtension
+namespace SilverCommerce\DownloadableProducts;
+
+use SilverStripe\ORM\DataExtension;
+use SilverCommerce\OrdersAdmin\Model\Invoice;
+
+class LineItemExtension extends DataExtension
 {
 
     public function getDownloadLink()
     {
-        $order = Order::get()->byID($this->owner->ParentID);
+        $order = Invoice::get()->byID($this->owner->ParentID);
         $match = $this->owner->match();
 
         if ($match && method_exists($match, "getDownloadLink")) {

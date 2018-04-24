@@ -1,13 +1,9 @@
 ---
 Name: downloadableproductsconfig
-After: '#rootroutes'
 ---
-Director:
+SilverStripe\Control\Director:
   rules:
     'assets/downloadable': 'DownloadableFileController'
-Checkout_Controller:
+SilverCommerce\OrdersAdmin\Model\LineItem:
   extensions:
-    - DownloadableCheckoutExtension
-OrderItem:
-  extensions:
-    - DownloadableOrderItemExtension
+    - SilverCommerce\DownloadableProducts\LineItemExtension
