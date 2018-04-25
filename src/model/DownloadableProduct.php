@@ -14,6 +14,13 @@ class DownloadableProduct extends Product
 {
 
     /**
+     * Set the default DB table name
+     * 
+     * @var string
+     */
+    private static $table_name = "DownloadableProduct";
+
+    /**
      * A list of statuses that an order containing this product must
      * have in order to allow this product to be downloaded.
      *
@@ -25,11 +32,13 @@ class DownloadableProduct extends Product
         "dispatched"
     );
 
+    /**
+     * The location to place the uploaded files
+     * 
+     * @var string
+     */
     private static $folder_name = "downloadableproducts";
 
-    /**
-     * @config
-     */
     private static $description = "A product that can be downloaded";
 
     private static $db = array(
@@ -50,8 +59,8 @@ class DownloadableProduct extends Product
     );
 
     /**
-     * Is this product deliverable? Largely this is used
-     * by the shopping cart when adding to cart.
+     * Downloadable products are not deliverable. This will be
+     * detected by the shopping cart to disable delivery options.
      *
      * @return boolean
      */
