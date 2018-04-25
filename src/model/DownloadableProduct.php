@@ -3,9 +3,10 @@
 namespace SilverCommerce\DownloadableProducts;
 
 use Product;
+use SilverStripe\Assets\File;
 use SilverStripe\Forms\TextField;
-use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Security\Security;
+use SilverStripe\AssetAdmin\Forms\UploadField;
 
 /**
  * Product class that will allow adding of product to the CMS.
@@ -26,11 +27,11 @@ class DownloadableProduct extends Product
      *
      * @config
      */
-    private static $allowed_order_statuses = array(
+    private static $allowed_order_statuses = [
         "paid",
         "processing",
         "dispatched"
-    );
+    ];
 
     /**
      * The location to place the uploaded files
@@ -41,22 +42,26 @@ class DownloadableProduct extends Product
 
     private static $description = "A product that can be downloaded";
 
-    private static $db = array(
+    private static $db = [
         'LinkLife' => 'Int'
-    );
+    ];
 
-    private static $has_one = array(
-        "File" => "File"
-    );
+    private static $has_one = [
+        "File" => File::class
+    ];
 
-    private static $casting = array(
+    private static $casting = [
         "DownloadLink" => "Varchar",
         "Deliverable" => "Boolean"
-    );
+    ];
 
-    private static $defaults = array(
+    private static $owns = [
+        "File"
+    ];
+
+    private static $defaults = [
         'LinkLife' => 7
-    );
+    ];
 
     /**
      * Downloadable products are not deliverable. This will be
@@ -72,6 +77,7 @@ class DownloadableProduct extends Product
     /**
      * Get the link to download the file associated with this product
      *
+     * @return string
      */
     public function getDownloadLink()
     {
@@ -90,42 +96,59 @@ class DownloadableProduct extends Product
         $fields = parent::getCMSFields();
 
         $fields->removeByName("Weight");
-        $fields->removeByName("PackSize");
 
         $fields->addFieldsToTab(
             "Root.Settings",
-            array(
+            [
                 TextField::create('LinkLife', 'Life of download link (in days)'),
                 UploadField::create("File")
                     ->setFolderName($this->config()->folder_name)
-            )
+            ]
         );
 
         return $fields;
     }
 
+    /**
+     * Ensure weight is removed on save
+     *
+     * @return void
+     */
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
 
-        // Downloadable products have 0 weight and Pack Size
         $this->Weight = 0;
-        $this->PackSize = 0;
     }
 
-    public function canDownload($member = null)
+    /**
+     * Special permission to see if this product can be downloaded by the current member
+     *
+     * @param Member $member The current member object
+     *
+     * @return boolean
+     */
+    public function canDownload(Member $member = null)
     {
-        if (!$member || !$member instanceof Member) {
+        if (!$member) {
             $member = Security::getCurrentUser();
         }
 
+        $contact = null;
+
         if (isset($member)) {
-            $items = $member
-                ->Orders()
-                ->filter(array(
-                    "Status" => $this->config()->allowed_order_statuses,
-                    "Items.StockID" => $this->StockID
-                ));
+            $contact = $member->Contact();
+        }
+
+        if (isset($contact)) {
+            $items = $contact
+                ->Invoices()
+                ->filter(
+                    [
+                        "Status" => $this->config()->allowed_order_statuses,
+                        "Items.StockID" => $this->StockID
+                    ]
+                );
 
             return $items->exists();
         }
