@@ -40,10 +40,23 @@ under "Settings". Alternativley you can change this glocally using config:
 
 ## Restrict the downloads folder
 
-By default, this module taps into SilverStripe 4's file permissions system.
-This means any file attached to a `DownloadableProduct` will be made
-unavailable to view unless the current user can edit the file or they have
-purchased it.
+By default, this module taps into SilverStripe 4's file permissions system,
+creating a `Folder` that will contain all downloadable products and giving
+it restricted permissions.
+
+Any file attached to a `DownloadableProduct` will be moved to this folder 
+and made unavailable to view unless the current user can edit the file or they
+have purchased it.
+
+### Changing the default download location
+
+If you wish to change the default location downloadable products are placed,
+you can change the `folder_name` config variable, EG:
+
+    SilverCommerce\DownloadableProducts\Model\DownloadableProduct:
+        folder_name: "mydownloadlocation"
+
+### Using alternate downloads controller
 
 If you are not using a secured assets folder in SilverStripe 4 (possibly for
 performance reasons), then this module does come with a simple controller to
