@@ -1,8 +1,8 @@
 # SilverCommerce Downloadable Products Module
 
-Add downloadable product type to the SilverCommerce install that allows users
-to attach a file to a product that can only be downloaded when the user is
-logged in and has bought it.
+Adds a downloadable product type to a SilverCommerce install, that allows
+users to attach a file that can only be downloaded when the user has bought
+it.
 
 ## Dependancies
 
@@ -15,28 +15,55 @@ Install using composer:
 
     composer require silvercommerce/downloadable-products
 
-Then run: dev/build/?flush=all
+Then run: dev/build/?flush=1
 
 ## Usage
 
-By default this module adds a "Downloadable Product" postage amount and
-sets up the mechanisams needed to buy and download products.
+1. Visit /admin on your SilverStripe site.
+2. Navigate to the "Catalogue".
+3. Add a new "Downloadable Product" and setup.
+4. Click "Settings" and attach a file.
 
-You will also need to do some additional tasks to ensure that users get
-the best experience and you keep your files secure.
+## Setting a longer Link Life
 
-**NOTE:** You will need to perform the following additional steps
-manually in order to gain the most from this module.
+By default, all products will be available via their download link for 7 days
+(if the user did not create an account during the pruchase process).
 
-### Restrict the downloads folder (using Apache or IIS 7)
+If you would like to increase this length, you can change it on the product,
+under "Settings". Alternativley you can change this glocally using config: 
 
-The file downloads section of your Silverstripe install will need to be
-restricted (otherwise users could share the download links). You can
-do this in your .htaccess or web.config by adding the following:
+    SilverCommerce\DownloadableProducts\DownloadableProduct:
+        defaults:
+            LinkLife: 14 # two weeks
+
+**NOTE: You will ned to re-save any existing products for this to take effect**
+
+## Restrict the downloads folder
+
+By default, this module taps into SilverStripe 4's file permissions system.
+This means any file attached to a `DownloadableProduct` will be made
+unavailable to view unless the current user can edit the file or they have
+purchased it.
+
+If you are not using a secured assets folder in SilverStripe 4 (possibly for
+performance reasons), then this module does come with a simple controller to
+manage downloads. You can start using this by adding something like below to
+your config.yml:
+
+    SilverStripe\Control\Director:
+      rules:
+        'assets/downloadableproducts': 'DownloadableFileController'
+
+This will ensure the folder "downloadableproducts" in assets is mapped to the
+controller.
+
+You will also need to tell your webserver that these URL's are now handled by
+SilverStripe (otherwise users could share the download links). You can do this
+in your .htaccess by adding the following:
 
     RewriteEngine On
     RewriteCond %{REQUEST_URI} ^(.*)$
-    RewriteRule assets/downloadable/* $frameworkDir/main.php?url=%1 [QSA]
+    RewriteRule assets/downloadable/* index.php?url=%1 [QSA]
 
 Or alternativley, if you use web.config, add the following:
 
@@ -44,7 +71,7 @@ Or alternativley, if you use web.config, add the following:
         <rules>
             <rule name="Silverstripe downloadable products" stopProcessing="true">
                 <match url="^assets/downloadable/(.*)$" />
-                <action type="Rewrite" url="$frameworkDir/main.php?url={R:1}" appendQueryString="true" />
+                <action type="Rewrite" url="index.php?url={R:1}" appendQueryString="true" />
             </rule>
         </rules>
     </rewrite>
@@ -52,12 +79,15 @@ Or alternativley, if you use web.config, add the following:
 **NOTE:** The IIS script above **should** work, but has not been tested,
 some tweaking may be required.
 
-### Add download link to orders pannel and emails
+## Add download link to orders pannel and emails
 
 When you have access to a product in either the orders panel or an email
-then you can call $DownloadLink to render the download URL into the
-template. For example, in the order paid email you can add something,ike
-this:
+then you can call `$DownloadLink` to render the download URL into the
+template.
+
+For example, if an invoice has been produced and marked as paid (and you
+have setup a relevent notification) you can update your email template to
+use the following:
 
     OrderNotificationEmail_Customer.ss
 
@@ -65,7 +95,7 @@ this:
         <tr>
             <td>
                 {$Title}
-                <% if $DownloadLink %> <small>(<a href="$DownloadLink">Download</a>)</small><% end_if %>
+                <% if $DownloadLink %>(<a href="$DownloadLink">Download</a>)<% end_if %>
                 <% if $StockID %>($StockID)<% end_if %><br/>
                 <em>$CustomisationHTML</em>
             </td>
@@ -73,6 +103,4 @@ this:
             <td style="text-align: right">{$Price.Nice}</td>
         </tr>
     <% end_loop %></tbody>
-
-###
 
