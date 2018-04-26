@@ -7,6 +7,8 @@ use SilverStripe\Assets\File;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Security\Security;
 use SilverStripe\AssetAdmin\Forms\UploadField;
+use SilverCommerce\OrdersAdmin\Model\Invoice;
+use SilverStripe\Core\Config\Config;
 
 /**
  * Product class that will allow adding of product to the CMS.
@@ -20,18 +22,6 @@ class DownloadableProduct extends Product
      * @var string
      */
     private static $table_name = "DownloadableProduct";
-
-    /**
-     * A list of statuses that an order containing this product must
-     * have in order to allow this product to be downloaded.
-     *
-     * @config
-     */
-    private static $allowed_order_statuses = [
-        "paid",
-        "processing",
-        "dispatched"
-    ];
 
     /**
      * The location to place the uploaded files
@@ -145,7 +135,8 @@ class DownloadableProduct extends Product
                 ->Invoices()
                 ->filter(
                     [
-                        "Status" => $this->config()->allowed_order_statuses,
+                        "Status" => Config::inst()
+                            ->get(Invoice::class, "paid_statuses"),
                         "Items.StockID" => $this->StockID
                     ]
                 );
