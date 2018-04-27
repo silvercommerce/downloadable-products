@@ -32,7 +32,7 @@ By default, all products will be available via their download link for 7 days
 If you would like to increase this length, you can change it on the product,
 under "Settings". Alternativley you can change this glocally using config: 
 
-    SilverCommerce\DownloadableProducts\DownloadableProduct:
+    SilverCommerce\DownloadableProducts\Model\DownloadableProduct:
         defaults:
             LinkLife: 14 # two weeks
 
@@ -40,13 +40,12 @@ under "Settings". Alternativley you can change this glocally using config:
 
 ## Restrict the downloads folder
 
-By default, this module taps into SilverStripe 4's file permissions system,
-creating a `Folder` that will contain all downloadable products and giving
-it restricted permissions.
+By default, this module adds files into a restricted folder. Any file attached
+to a `DownloadableProduct` will be moved to this folder and made unavailable to
+view unless the current user can edit the file they use the associated download
+link.
 
-Any file attached to a `DownloadableProduct` will be moved to this folder 
-and made unavailable to view unless the current user can edit the file or they
-have purchased it.
+**NOTE: You need to ensure SilverStripe is managing your assets folder for access restriction to work.**
 
 ### Changing the default download location
 
@@ -56,43 +55,16 @@ you can change the `folder_name` config variable, EG:
     SilverCommerce\DownloadableProducts\Model\DownloadableProduct:
         folder_name: "mydownloadlocation"
 
-### Using alternate downloads controller
+## The `DownloadFileController`
 
-If you are not using a secured assets folder in SilverStripe 4 (possibly for
-performance reasons), then this module does come with a simple controller to
-manage downloads. You can start using this by adding something like below to
-your config.yml:
+By default, anyone purchasing a downloadable product can be provided a download
+link (see below). This will send them to `DownloadFileController`, which will
+attempt to see if the user is allowed to download the file.
 
-    SilverStripe\Control\Director:
-      rules:
-        'assets/downloadableproducts': 'DownloadableFileController'
+If the link has expired, or the user user is not allowed to download, an error
+will be displayed.
 
-This will ensure the folder "downloadableproducts" in assets is mapped to the
-controller.
-
-You will also need to tell your webserver that these URL's are now handled by
-SilverStripe (otherwise users could share the download links). You can do this
-in your .htaccess by adding the following:
-
-    RewriteEngine On
-    RewriteCond %{REQUEST_URI} ^(.*)$
-    RewriteRule assets/downloadable/* index.php?url=%1 [QSA]
-
-Or alternativley, if you use web.config, add the following:
-
-    <rewrite>
-        <rules>
-            <rule name="Silverstripe downloadable products" stopProcessing="true">
-                <match url="^assets/downloadable/(.*)$" />
-                <action type="Rewrite" url="index.php?url={R:1}" appendQueryString="true" />
-            </rule>
-        </rules>
-    </rewrite>
-
-**NOTE:** The IIS script above **should** work, but has not been tested,
-some tweaking may be required.
-
-## Add download link to orders pannel and emails
+## Add a `DownloadLink` to orders pannel and emails
 
 When you have access to a product in either the orders panel or an email
 then you can call `$DownloadLink` to render the download URL into the
@@ -116,4 +88,3 @@ use the following:
             <td style="text-align: right">{$Price.Nice}</td>
         </tr>
     <% end_loop %></tbody>
-
