@@ -6,9 +6,12 @@ use Product;
 use SilverStripe\Assets\File;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Security\Security;
-use SilverStripe\AssetAdmin\Forms\UploadField;
-use SilverCommerce\OrdersAdmin\Model\Invoice;
 use SilverStripe\Core\Config\Config;
+use SilverCommerce\OrdersAdmin\Model\Invoice;
+use SilverStripe\AssetAdmin\Forms\UploadField;
+use SilverCommerce\DownloadableProducts\DownloadFolder;
+use SilverCommerce\DownloadableProducts\DownloadableFileController;
+use SilverStripe\Core\Injector\Injector;
 
 /**
  * Product class that will allow adding of product to the CMS.
@@ -22,13 +25,6 @@ class DownloadableProduct extends Product
      * @var string
      */
     private static $table_name = "DownloadableProduct";
-
-    /**
-     * The location to place the uploaded files
-     * 
-     * @var string
-     */
-    private static $folder_name = "downloadableproducts";
 
     private static $description = "A product that can be downloaded";
 
@@ -67,17 +63,40 @@ class DownloadableProduct extends Product
     /**
      * Get the link to download the file associated with this product
      *
+     * @param int    $invoice_id the ID of an associated invoice
+     * @param string $access_key key of assocaiated invoice
+     * 
      * @return string
      */
-    public function getDownloadLink()
+    public function getDownloadLink($invoice_id, $access_key)
     {
-        $link = "";
+        $file = $this->File();
 
-        if ($this->FileID) {
-            $link = $this->File()->Link();
+        if ($file->exists()) {
+            $download = Injector::inst()
+                ->get(DownloadableFileController::class);
+
+            return $download->DownloadLink(
+                $file->ID,
+                $invoice_id,
+                $access_key,
+                $file->Name
+            );
         }
 
-        return $link;
+        return "";
+    }
+
+    /**
+     * Get the folder to add downloads to
+     * 
+     * @return DownloadFolder
+     */
+    public function getDownloadFolder()
+    {
+        return DownloadFolder::find_or_make(
+            Config::inst()->get(DownloadFolder::class, "folder_name")
+        );
     }
 
 

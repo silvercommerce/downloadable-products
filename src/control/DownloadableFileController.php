@@ -4,27 +4,27 @@ namespace SilverCommerce\DownloadableProducts;
 
 use DateTime;
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\Image;
 use SilverStripe\Control\Director;
-use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Security\Security;
 use SilverStripe\Control\Controller;
-use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Control\HTTPResponse;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Control\HTTPStreamResponse;
 use SilverCommerce\OrdersAdmin\Model\Invoice;
-use SilverCommerce\DownloadableProducts\DownloadableProduct;
+use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 
 /**
- * Core controller responsible for determining if the current user can
- * download the file selected.
+ * Controller responsible for downloading the resticted file (if the
+ * user is allowed).
  *
- * A lot of this code is taken and modified from the "secure asssts"
- * Silverstripe Module
+ * This class will take the file URL, check if the current member (if
+ * there is one) is allowed to download the file. If not, it will check
+ * the URL and compare it to the link life of the file (if valid).
  */
 class DownloadableFileController extends Controller
 {
 
     /**
-     * We calculate the timelimit based on the filesize. Set to 0 to give unlimited
+     * Calculate a timelimit based on the filesize. Set to 0 to give unlimited
      * timelimit. The calculation is: give enough time for the user with x kB/s
      * connection to donwload the entire file.
      *
@@ -35,148 +35,155 @@ class DownloadableFileController extends Controller
     private static $min_download_bandwidth = 50;
 
     /**
-     * Process all incoming requests passed to this controller, checking
-     * that the file exists and passing the file through if possible.
-     *
+     * The base URL segment this controller will be accessed via
+     * 
+     * @var string
+    */
+    private static $url_segment = "downloadproduct";
+
+    /**
      * {@inheritdoc}
+     */
+    private static $url_handlers = [
+        '$ID/$InvoiceID/$AccessKey/$FileName' => 'index'
+    ];
+
+    /**
+     * Generate a link to this controller for downloading a file
+     * 
+     * @param int    $id         ID of the file.
+     * @param int    $invoice_id ID of an associate invoice.
+     * @param string $access_key Access key of invoice (for security).
+     * @param string $filename   Actual name of file.
+     * 
+     * @return string
+     */
+    public function DownloadLink($id, $invoice_id, $access_key, $filename)
+    {
+        return Controller::join_links(
+            $this->AbsoluteLink(),
+            $id,
+            $invoice_id,
+            $access_key,
+            $filename
+        );
+    }
+
+    /**
+     * Get a URL to download a file.
      *
+     * @param string $action Action we would like to view.
+     *
+     * @return string
+     */
+    public function Link($action = NULL)
+    {
+        return Controller::join_links(
+            $this->config()->url_segment,
+            $action
+        );
+    }
+    
+    /**
+     * Get absolute URL to download a file.
+     *
+     * @param string $action Action we would like to view.
+     *
+     * @return string
+     */
+    public function AbsoluteLink($action = NULL)
+    {
+        return Controller::join_links(
+            Director::absoluteBaseURL(),
+            $this->Link($action)
+        );
+    }
+
+    /**
+     * Main action for this controller, it handles the security checks and then
+     * returns the file, or either an error or a login screen.
+     * 
      * @return HTTPResponse
      */
-    public function handleRequest(HTTPRequest $request)
-    {
-        if (!$request) {
-            user_error("Controller::handleRequest() not passed a request!", E_USER_ERROR);
-        }
-        
-        // Copied from Controller::handleRequest()
-        $this->pushCurrent();
-        $this->urlParams = $request->allParams();
-        $this->request = $request;
-        $this->response = new HTTPResponse();
-
-        $url = array_key_exists('url', $_GET) ? $_GET['url'] : $_SERVER['REQUEST_URI'];
-
-        // remove any relative base URL and prefixed slash that get appended to the file path
-        // e.g. /mysite/assets/test.txt should become assets/test.txt to match the Filename field on File record
-        $url = Director::makeRelative(ltrim(str_replace(BASE_URL, '', $url), '/'));
-        $file = File::find($url);
-
-        if ($this->canDownloadFile($file)) {
-            // If we're trying to access a resampled image.
-            if (preg_match('/_resampled\/[^-]+-/', $url)) {
-                // File::find() will always return the original image, but we still want to serve the resampled version.
-                $file = new Image();
-                $file->Filename = $url;
-            }
-
-            $this->extend('onBeforeSendFile', $file);
-
-            return $this->sendFile($file);
-        } else {
-            if ($file instanceof File) {
-                // Permission failure
-                Security::permissionFailure($this, 'You are not authorised to access this resource. Please log in.');
-            } else {
-                // File doesn't exist
-                $this->response = new HTTPResponse('File Not Found', 404);
-            }
-        }
-
-        return $this->response;
-    }
-
-    /**
-     * Output file to the browser.
-     * For performance reasons, we avoid SS_HTTPResponse and just output the contents instead.
-     */
-    public function sendFile($file)
-    {
-        $path = $file->getFullPath();
-
-        if (SapphireTest::is_running_test()) {
-            return file_get_contents($path);
-        }
-
-        header('Content-Description: File Transfer');
-        // Quotes needed to retain spaces (http://kb.mozillazine.org/Filenames_with_spaces_are_truncated_upon_download)
-        header('Content-Disposition: inline; filename="' . basename($path) . '"');
-        header('Content-Length: ' . $file->getAbsoluteSize());
-        header('Content-Type: ' . HTTP::get_mime_type($file->getRelativePath()));
-        header('Content-Transfer-Encoding: binary');
-        // Fixes IE6,7,8 file downloads over HTTPS bug (http://support.microsoft.com/kb/812935)
-        header('Pragma: ');
-
-        if ($this->config()->min_download_bandwidth) {
-            // Allow the download to last long enough to allow full download with min_download_bandwidth connection.
-            increase_time_limit_to((int)(filesize($path)/($this->config()->min_download_bandwidth*1024)));
-        } else {
-            // Remove the timelimit.
-            increase_time_limit_to(0);
-        }
-
-        // Clear PHP buffer, otherwise the script will try to allocate memory for entire file.
-        while (ob_get_level() > 0) {
-            ob_end_flush();
-        }
-
-        // Prevent blocking of the session file by PHP. Without this the user can't visit another page of the same
-        // website during download (see http://konrness.com/php5/how-to-prevent-blocking-php-requests/)
-        session_write_close();
-
-        readfile($path);
-        die();
-    }
-
-    /**
-     * Determine if the file we found can be downloaded or not
-     *
-     * @return Boolean
-     */
-    public function canDownloadFile(File $file = null)
-    {
-        if ($file instanceof File) {
-            $product = DownloadableProduct::get()
-                ->filter("FileID", $file->ID)
-                ->first();
-
-            if ($product && ($product->canDownload() || $this->hasAccess())) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public function hasAccess()
+    public function index()
     {
         $request = $this->getRequest();
-        $return = false;
-        $vars = $request->getVars();
-        $url = array_key_exists('url', $_GET) ? $_GET['url'] : $_SERVER['REQUEST_URI'];
-        $url = Director::makeRelative(ltrim(str_replace(BASE_URL, '', $url), '/'));
-        $file = File::find($url);
+        $member = Security::getCurrentUser();
+        $file = File::get()->byID($request->param("ID"));
 
-        $order = Invoice::get()->byID($vars['o']);
-        if ($order) {
-            $return = $order->AccessKey == $vars['k'] ? true : false;
-            if ($return) {
-                $product = DownloadableProduct::get()
-                    ->filter("FileID", $file->ID)
-                    ->first();
-                if ($product) {
-                    $life = $product->LinkLife;
-                    $origin = new DateTime($order->dbObject('LastEdited')->Rfc822());
-                    $now = new DateTime();
-                    $diff = (int) $now->diff($origin)->format('%d');
-                    if ($life < $diff) {
-                        $return = false;
-                    }
-                } else {
-                    $return = false;
-                }
+        if (empty($file)) {
+            return $this->httpError(404);
+        }
+
+        // Does this file need to have permissions checked?
+        $product = $file->DownloadableProduct();
+
+        if (!$product->exists()) {
+            return $this->redirect($file->AbsoluteLink());
+        }
+
+        // If the user is logged in, can they download this file?
+        if (isset($member) && $product->canDownload($member)) {
+            $this->extend('onBeforeSendFile', $file);
+            return $this->sendFile($file);
+        }
+        
+        // Finally  Attempt to get the invoice from the URL vars
+        // and see if it matches this download
+        $invoice = Invoice::get()->filter(
+            [
+                "ID" => $request->param('InvoiceID'),
+                "AccessKey" => $request->param('AccessKey')
+            ]
+        )->first();
+    
+        if (isset($invoice)) {
+            $origin = new DateTime($invoice->dbObject('StartDate')->Rfc822());
+            $now = new DateTime();
+            $diff = (int) $now->diff($origin)->format('%d');
+
+            if ($diff < $product->LinkLife) {
+                $this->extend('onBeforeSendFile', $file);
+                return $this->sendFile($file);
             }
         }
 
-        return $return;
+        // Finally, return a login screen
+        return Security::permissionFailure(
+            $this,
+            _t(
+                'SilverCommerce\DownloadableProducts.NotAuthorised',
+                'You are not authorised to access this resource. Please log in.'
+            )
+        );
+    }
+
+    /**
+     * Output file to the browser as a stream.
+     * 
+     * @param File $file A file object
+     * 
+     * @return int|boolean
+     */
+    protected function sendFile(File $file)
+    {
+        $path = $file->getSourceURL(true);
+        $size = $file->getAbsoluteSize();
+        $mime = $file->getMimeType();
+        $stream = $file->getStream();
+        $min_bandwidth = $this->config()->min_download_bandwidth;
+        $time = 0;
+
+        // Create streamable response
+        $response = HTTPStreamResponse::create($stream, $size)
+            ->addHeader('Content-Type', $mime);
+
+        // Add standard headers
+        $headers = Config::inst()->get(FlysystemAssetStore::class, 'file_response_headers');
+        foreach ($headers as $header => $value) {
+            $response->addHeader($header, $value);
+        }
+
+        return $response;
     }
 }
