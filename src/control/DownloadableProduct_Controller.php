@@ -4,7 +4,7 @@ namespace SilverCommerce\DownloadableProducts;
 
 use ProductController;
 
-class DownloadableProduct_Controller extends ProductController
+class DownloadableProductController extends ProductController
 {
 
 }
