@@ -32,7 +32,7 @@ By default, all products will be available via their download link for 7 days
 If you would like to increase this length, you can change it on the product,
 under "Settings". Alternativley you can change this glocally using config: 
 
-    SilverCommerce\DownloadableProducts\Model\DownloadableProduct:
+    SilverCommerce\DownloadableProducts\DownloadableProduct:
         defaults:
             LinkLife: 14 # two weeks
 
@@ -52,7 +52,7 @@ link.
 If you wish to change the default location downloadable products are placed,
 you can change the `folder_name` config variable, EG:
 
-    SilverCommerce\DownloadableProducts\Model\DownloadableProduct:
+    SilverCommerce\DownloadableProducts\DownloadableProduct:
         folder_name: "mydownloadlocation"
 
 ## The `DownloadFileController`
