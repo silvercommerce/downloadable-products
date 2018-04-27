@@ -10,7 +10,7 @@ use SilverStripe\Core\Config\Config;
 use SilverCommerce\OrdersAdmin\Model\Invoice;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverCommerce\DownloadableProducts\DownloadFolder;
-use SilverCommerce\DownloadableProducts\DownloadableFileController;
+use SilverCommerce\DownloadableProducts\FileDownloadController;
 use SilverStripe\Core\Injector\Injector;
 
 /**
@@ -74,7 +74,7 @@ class DownloadableProduct extends Product
 
         if ($file->exists()) {
             $download = Injector::inst()
-                ->get(DownloadableFileController::class);
+                ->get(FileDownloadController::class);
 
             return $download->DownloadLink(
                 $file->ID,
@@ -119,7 +119,8 @@ class DownloadableProduct extends Product
     }
 
     /**
-     * Ensure weight is removed on save
+     * Ensure weight is removed on save and that attached files are moved to
+     * the correct folder
      *
      * @return void
      */
@@ -127,7 +128,29 @@ class DownloadableProduct extends Product
     {
         parent::onBeforeWrite();
 
+        // Set weight
         $this->Weight = 0;
+
+        // Deal with moving file
+        $file = $this->File();
+        $folder = $this->getDownloadFolder();
+        $move = true;
+
+        // If the file is in the download folder (or an ancestor), don't move
+        if ($file->exists() && $file->ParentID == $folder->ID) {
+            $move = false;
+        } elseif ($file->exists()) {
+            $id_list = $folder->getDescendantIDList();
+            if (in_array($file->ParentID, $id_list)) {
+                $move = false;
+            }
+        }
+
+        // If needed, move the attached file to a new folder
+        if ($move) {
+            $file->ParentID = $folder->ID;
+            $file->write();
+        }
     }
 
     /**
