@@ -3,9 +3,6 @@
 namespace SilverCommerce\DownloadableProducts\Extensions;
 
 use SilverStripe\ORM\DataExtension;
-use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Core\Injector\Injector;
-use SilverCommerce\OrdersAdmin\Model\Invoice;
 use SilverCommerce\DownloadableProducts\Model\DownloadableProduct;
 
 /**
