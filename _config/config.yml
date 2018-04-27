@@ -3,7 +3,10 @@ Name: downloadableproductsconfig
 ---
 SilverStripe\Control\Director:
   rules:
-    'assets/downloadable': 'DownloadableFileController'
+    'downloadproduct': 'SilverCommerce\DownloadableProducts\Control\DownloadableFileController'
 SilverCommerce\OrdersAdmin\Model\LineItem:
   extensions:
-    - SilverCommerce\DownloadableProducts\LineItemExtension
+    - SilverCommerce\DownloadableProducts\Extensions\LineItemExtension
+SilverStripe\Assets\File:
+  extensions:
+    - SilverCommerce\DownloadableProducts\Extensions\FileExtension
