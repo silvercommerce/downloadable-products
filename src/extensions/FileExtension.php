@@ -1,9 +1,9 @@
 <?php
 
-namespace SilverCommerce\DownloadableProducts\Extensions;
+namespace SilverCommerce\DownloadableProducts;
 
 use SilverStripe\ORM\DataExtension;
-use SilverCommerce\DownloadableProducts\Model\DownloadableProduct;
+use SilverCommerce\DownloadableProducts\DownloadableProduct;
 
 /**
  * Custom extension to file that checks if the file is "downloadable",
