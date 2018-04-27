@@ -20,7 +20,7 @@ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
  * there is one) is allowed to download the file. If not, it will check
  * the URL and compare it to the link life of the file (if valid).
  */
-class DownloadableFileController extends Controller
+class FileDownloadController extends Controller
 {
 
     /**
