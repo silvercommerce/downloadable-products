@@ -55,10 +55,10 @@ you can change the `folder_name` config variable, EG:
     SilverCommerce\DownloadableProducts\DownloadableProduct:
         folder_name: "mydownloadlocation"
 
-## The `DownloadFileController`
+## The `FileDownloadController`
 
 By default, anyone purchasing a downloadable product can be provided a download
-link (see below). This will send them to `DownloadFileController`, which will
+link (see below). This will send them to `FileDownloadController`, which will
 attempt to see if the user is allowed to download the file.
 
 If the link has expired, or the user user is not allowed to download, an error
