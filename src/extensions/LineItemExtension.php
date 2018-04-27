@@ -1,6 +1,6 @@
 <?php
 
-namespace SilverCommerce\DownloadableProducts\Extensions;
+namespace SilverCommerce\DownloadableProducts;
 
 use SilverStripe\ORM\DataExtension;
 use SilverCommerce\OrdersAdmin\Model\Invoice;
@@ -12,17 +12,23 @@ class LineItemExtension extends DataExtension
         "DownloadLink" => "Varchar"
     ];
 
+    /**
+     * Generate a link which can be used to download this product.
+     * 
+     * @return string
+     */
     public function getDownloadLink()
     {
-        $invoice = Invoice::get()->byID($this->owner->ParentID);
-        $match = $this->owner->match();
+        $invoice = $this->getOwner()->Parent();
+        $match = $this->getOwner()->match();
 
-        if ($match && method_exists($match, "getDownloadLink")) {
-            return $match->getDownloadLink().
-                '?o='.$invoice->ID.
-                '&k='.$invoice->AccessKey;
+        if ($match && method_exists($match, "getDownloadLink") && $invoice->isPaid()) {
+            return $match->getDownloadLink(
+                $invoice->ID,
+                $invoice->AccessKey
+            );
         }
 
-        return false;
+        return "";
     }
 }
