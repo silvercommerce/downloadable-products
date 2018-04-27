@@ -1,5 +1,7 @@
 # SilverCommerce Downloadable Products Module
 
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/silvercommerce/downloadable-products/badges/quality-score.png?b=1.0)](https://scrutinizer-ci.com/g/silvercommerce/downloadable-products/?branch=1.0)
+
 Adds a downloadable product type to a SilverCommerce install, that allows
 users to attach a file that can only be downloaded when the user has bought
 it.
