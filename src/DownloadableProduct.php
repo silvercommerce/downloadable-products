@@ -6,6 +6,7 @@ use Product;
 use SilverStripe\Assets\File;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Security\Security;
+use SilverStripe\Security\Member;
 use SilverStripe\Core\Config\Config;
 use SilverCommerce\OrdersAdmin\Model\Invoice;
 use SilverStripe\AssetAdmin\Forms\UploadField;
