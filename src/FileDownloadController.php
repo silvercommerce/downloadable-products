@@ -3,6 +3,7 @@
 namespace SilverCommerce\DownloadableProducts;
 
 use DateTime;
+use SilverStripe\Dev\Debug;
 use SilverStripe\Assets\File;
 use SilverStripe\Control\Director;
 use SilverStripe\Security\Security;
@@ -145,6 +146,14 @@ class FileDownloadController extends Controller
             if ($diff < $product->LinkLife) {
                 $this->extend('onBeforeSendFile', $file);
                 return $this->sendFile($file);
+            } else {
+                return Security::permissionFailure(
+                    $this,
+                    _t(
+                        'SilverCommerce\DownloadableProducts.LinkExpired',
+                        'This download link has now expired.'
+                    )
+                );
             }
         }
 
