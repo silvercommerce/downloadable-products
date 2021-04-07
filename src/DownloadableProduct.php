@@ -27,6 +27,10 @@ class DownloadableProduct extends Product
      */
     private static $table_name = "DownloadableProduct";
 
+    private static $singular_name = 'Downloadable Product';
+
+    private static $plural_name = 'Downloadable Products';
+
     private static $description = "A product that can be downloaded";
 
     private static $db = [
